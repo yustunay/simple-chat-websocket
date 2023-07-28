@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Chat</title>
+</head>
+<body>
+<form id="usernameForm">
+    <input type="text" id="usernameInput" placeholder="Enter your username"/>
+    <button type="submit">Set Username</button>
+</form>
+<form id="messageForm">
+    <input type="text" id="messageInput" placeholder="Type your message"/>
+    <button type="submit">Send</button>
+</form>
+
+<h2 id="usernameDisplay"></h2>
+<ul id="messagesList"></ul>
+
+<script>
+    const socket = new WebSocket("ws://localhost:8887");
+
+    socket.onopen = () => {
+        console.log("WebSocket connection opened");
+    };
+
+    socket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        displayMessage(message);
+    };
+
+    document
+        .getElementById("messageForm")
+        .addEventListener("submit", (event) => {
+            event.preventDefault();
+            const messageInput = document.getElementById("messageInput");
+            const message = {
+                message: messageInput.value,
+            };
+            socket.send(JSON.stringify(message));
+            messageInput.value = "";
+        });
+
+    document
+        .getElementById("usernameForm")
+        .addEventListener("submit", (event) => {
+            event.preventDefault();
+            const usernameInput = document.getElementById("usernameInput");
+            const username = usernameInput.value;
+            document.getElementById(
+                "usernameDisplay"
+            ).textContent = `Username: ${username}`;
+            usernameInput.value = "";
+            usernameForm.style.display = "none";
+
+            if (socket.OPEN) {
+                const message = {
+                    username: username,
+                };
+                socket.send(JSON.stringify(message));
+            }
+        });
+
+    function displayMessage(message) {
+        const messagesList = document.getElementById("messagesList");
+        const listItem = document.createElement("li");
+        listItem.textContent = `${message.username}: ${message.message}`;
+        messagesList.appendChild(listItem);
+    }
+</script>
+</body>
+</html>
